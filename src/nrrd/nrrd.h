@@ -406,6 +406,12 @@ typedef struct NrrdIoState_t {
                                datafiles).  Warning: can result in broken
                                noncomformant files.
                                (be careful with this) */
+    skipHeader,             /* if non-zero (all formats):
+                               ON READ: don't allocate header for, and don't
+                               read in, useful when reading the nrrd in chuncks.
+                               ON WRITE: don't write header of file,
+                               useful when writing the nrrd in chuncks.
+                               (be careful with this) */
     skipFormatURL,          /* if non-zero for NRRD format ON WRITE:
                                skip the comment lines that document where
                                to find the NRRD file format specs */
@@ -428,7 +434,9 @@ typedef struct NrrdIoState_t {
                                used to allocate a buffer for header */
   void *oldData;            /* ON READ: if non-NULL, pointer to space that
                                has already been allocated for oldDataSize */
-  size_t oldDataSize;       /* ON READ: size of mem pointed to by oldData */
+  size_t oldDataSize,       /* ON READ: size of mem pointed to by oldData */
+    chunckElementNumber;    /* if != 0, a subset will be read or written and it indicates the
+                               number of element to be read or written.*/
 
   /* The format and encoding.  These are initialized to nrrdFormatUnknown
      and nrrdEncodingUnknown, respectively. USE THESE VALUES for
