@@ -80,6 +80,7 @@ _nrrdEncodingRaw_read(FILE *file, void *data, size_t elementNum,
     elementSize = nrrdElementSize(nrrd);
     maxChunkSize = 1024 * 1024 * 1024 / elementSize;
     while(ret < elementNum) {
+
       remainderValue = elementNum-ret;
       if (remainderValue < maxChunkSize) {
         chunkSize = remainderValue;

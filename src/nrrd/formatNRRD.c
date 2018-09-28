@@ -465,7 +465,8 @@ _nrrdFormatNRRD_read(FILE *file, Nrrd *nrrd, NrrdIoState *nio) {
         }
         /* comments and key/values are allowed multiple times */
         if (nio->seen[ret]
-            && !(ret == nrrdField_comment || ret == nrrdField_keyvalue)) {
+            && !(ret == nrrdField_comment || ret == nrrdField_keyvalue)
+            && nio->skipHeader == 0) {
           biffAddf(NRRD, "%s: already set field %s", me,
                    airEnumStr(nrrdField, ret));
           return 1;
@@ -522,7 +523,11 @@ _nrrdFormatNRRD_read(FILE *file, Nrrd *nrrd, NrrdIoState *nio) {
   /* NOTE: you have to open dataFile even in the case of skipData, because
      caller might have set keepNrrdDataFileOpen, in which case you need to
      do any line or byte skipping if it is specified */
-  valsPerPiece = nrrdElementNumber(nrrd)/_nrrdDataFNNumber(nio);
+  if (nio->chunckElementNumber != 0) {
+    valsPerPiece = nio->chunckElementNumber;
+  } else {
+    valsPerPiece = nrrdElementNumber(nrrd)/_nrrdDataFNNumber(nio);
+  }
   while (dataFile) {
     /* ---------------- skip, if need be */
     if (nrrdLineSkip(dataFile, nio)) {
