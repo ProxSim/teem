@@ -29,6 +29,10 @@ add_executable(test_tload tload.c)
 target_link_libraries(test_tload teem)
 add_test(NAME tload COMMAND $<TARGET_FILE:test_tload>)
 
+add_executable(test_tchunk tchunk.c)
+target_link_libraries(test_tchunk teem)
+add_test(NAME tchunk COMMAND $<TARGET_FILE:test_tchunk>)
+
 add_executable(test_tskip tskip.c)
 target_link_libraries(test_tskip teem)
 # Note the different file names; tests are run in parallel
@@ -50,3 +54,4 @@ add_test(NAME macros COMMAND $<TARGET_FILE:test_macros>)
 add_executable(test_bspec tbspec.c)
 target_link_libraries(test_bspec teem)
 add_test(NAME bspec COMMAND $<TARGET_FILE:test_bspec> -bs bleed wrap pad:42)
+

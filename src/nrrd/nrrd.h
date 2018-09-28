@@ -62,6 +62,8 @@ extern "C" {
 
 #define NRRD nrrdBiffKey
 
+#define NRRD_CHUNK_IO_AVAILABLE
+
 /*
 ******** NrrdAxisInfo struct
 **
@@ -414,7 +416,8 @@ typedef struct NrrdIoState_t {
                                you otherwise would, when reading the
                                nrrd format. Probably used in conjunction with
                                skipData.  (currently for "unu data")
-                               ON WRITE: no semantics */
+                               ON WRITE: Open the file nio->dataFile with the mode a (append).
+                               Useful when writing multiple time on a single nrrd file. */
     zlibLevel,              /* zlib compression level (0-9, -1 for
                                default[6], 0 for no compression). */
     zlibStrategy,           /* zlib compression strategy, can be one
@@ -429,6 +432,14 @@ typedef struct NrrdIoState_t {
   void *oldData;            /* ON READ: if non-NULL, pointer to space that
                                has already been allocated for oldDataSize */
   size_t oldDataSize;       /* ON READ: size of mem pointed to by oldData */
+  size_t  chunkElementCount;    /* if != 0, a subset will be read or written and it indicates the
+                                   number of elements to be read or written.*/
+  size_t  chunkStartElement;    /* indicates the starting element for the chunck, in the case
+                                    chunkElementCount != 0*/
+  size_t  oldChunkElementCount;   /* ON WRITE, indicates the number of elements for the previous chunck,
+                                     in the case chunkElementCount != 0*/
+  size_t  oldChunkStartElement;    /* ON WRITE, indicates starting element for the previous chunck,
+                                     in the case chunkElementCount != 0*/
 
   /* The format and encoding.  These are initialized to nrrdFormatUnknown
      and nrrdEncodingUnknown, respectively. USE THESE VALUES for

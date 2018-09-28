@@ -1033,10 +1033,26 @@ nrrdSave(const char *filename, const Nrrd *nrrd, NrrdIoState *nio) {
     nio->detachedHeader = AIR_FALSE;
   }
 
-  if (!( file = airFopen(filename, stdout, "wb") )) {
-    biffAddf(NRRD, "%s: couldn't fopen(\"%s\",\"wb\"): %s",
-             me, filename, strerror(errno));
-    airMopError(mop); return 1;
+  if (!nio->keepNrrdDataFileOpen) {
+    if (!( file = airFopen(filename, stdout, "wb") )) {
+      biffAddf(NRRD, "%s: couldn't fopen(\"%s\",\"wb\"): %s",
+               me, filename, strerror(errno));
+      airMopError(mop); return 1;
+    }
+  } else {
+    long int previousChunkEndElement = nio->oldChunkStartElement + nio->oldChunkElementCount;
+    if (((long int) (nio->chunkStartElement) - previousChunkEndElement) < -0.001) {
+      biffAddf(NRRD, "%s: the current chunk overwrites a previos one.", me);
+      airMopError(mop); return 1;
+    } else if ((nio->chunkStartElement - previousChunkEndElement) > 0.001) {
+      biffAddf(NRRD, "%s: there is a gap between the last and the current chunk", me);
+      airMopError(mop); return 1;
+    }
+    if (!( file = airFopen(filename, stdout, "ab") )) {
+      biffAddf(NRRD, "%s: couldn't fopen(\"%s\",\"ab\"): %s",
+               me, filename, strerror(errno));
+      airMopError(mop); return 1;
+    }
   }
   airMopAdd(mop, file, (airMopper)airFclose, airMopAlways);
 
@@ -1044,6 +1060,9 @@ nrrdSave(const char *filename, const Nrrd *nrrd, NrrdIoState *nio) {
     biffAddf(NRRD, "%s:", me);
     airMopError(mop); return 1;
   }
+
+  nio->oldChunkStartElement = nio->chunkStartElement;
+  nio->oldChunkElementCount = nio->chunkElementCount;
 
   airMopOkay(mop);
   return 0;
