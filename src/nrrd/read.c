@@ -196,7 +196,12 @@ _nrrdCalloc(Nrrd *nrrd, NrrdIoState *nio, FILE *file) {
   size_t needDataSize;
   int fd;
 
-  needDataSize = nrrdElementNumber(nrrd)*nrrdElementSize(nrrd);
+  if (nio->chunkElementCount > 0.001) {
+    needDataSize = nio->chunkElementCount*nrrdElementSize(nrrd);
+  } else {
+    needDataSize = nrrdElementNumber(nrrd)*nrrdElementSize(nrrd);
+  }
+
   if (nio->oldData &&  needDataSize == nio->oldDataSize) {
     /* re-use old data */
     nrrd->data = nio->oldData;
