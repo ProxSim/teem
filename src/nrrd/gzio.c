@@ -99,7 +99,7 @@ typedef struct _NrrdGzStream {
   char     *msg;    /* error message */
   int      transparent; /* 1 if input file is not a .gz file */
   char     mode;    /* 'w' or 'r' */
-  long     startpos; /* start of compressed data in file (header skipped) */
+  long long int     startpos; /* start of compressed data in file (header skipped) */
 } _NrrdGzStream;
 
 static int _nrrdGzMagic[2] = {0x1f, 0x8b}; /* gzip magic header */
@@ -258,7 +258,11 @@ _nrrdGzOpen(FILE* fd, const char* mode) {
      */
   } else {
     _nrrdGzCheckHeader(s); /* skip the .gz header */
-    s->startpos = (ftell(s->file) - s->stream.avail_in);
+#ifdef unix
+	s->startpos = (ftell(s->file) - s->stream.avail_in);
+#else
+	s->startpos = (_ftelli64(s->file) - s->stream.avail_in);
+#endif // unix
   }
   return (gzFile)s;
 }

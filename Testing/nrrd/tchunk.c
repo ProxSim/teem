@@ -84,6 +84,7 @@ main(int argc, const char **argv) {
 
   // Read the images
   for (long int imageIndex = 0; imageIndex < numberOfImages; imageIndex++) {
+	  fprintf(stderr, "%s: Reading image: %ld \n", me, imageIndex);
     // Read the chunk : each image needs to streamed as well in chunks
     // because nrrdLoad make a copy of teh read data in nin->data
     for (long int chunkIndex = 0; chunkIndex <= numberOfChunks; ++chunkIndex) {
@@ -106,7 +107,7 @@ main(int argc, const char **argv) {
         airMopAdd(mop, err = biffGetDone(NRRD), airFree, airMopAlways);
         fprintf(stderr, "%s: trouble reading data \"%s\":\n%s",
                 me, fullname, err);
-        airMopError(mop); return 1;
+		airMopError(mop); return 1;
       }
 
       if (nin->data == NULL) {
@@ -145,7 +146,7 @@ main(int argc, const char **argv) {
     if (imageIndex > 0) {
       nioWrite->keepNrrdDataFileOpen = 1;
     }
-
+	fprintf(stderr, "%s: Writing image: %ld \n", me, imageIndex);
     // In writing. We can give to nrrdSave directly the pointer to teh data.
     // Therefore we don't need to stream each image to ncopy->data in chunks.
     if (imageIndex == 0) {
@@ -162,7 +163,7 @@ main(int argc, const char **argv) {
 
     nioWrite->chunkStartElement = numberOfVolumeElementPerImage * imageIndex;
 
-    if (nrrdSave("tloadTest.nrrd", ncopy, nioWrite)) {
+    if (nrrdSave("tchunkTest.nrrd", ncopy, nioWrite)) {
       char *err;
       airMopAdd(mop, err = biffGetDone(NRRD), airFree, airMopAlways);
       fprintf(stderr, "%s: trouble w/ save :\n%s\n", me, err);
@@ -175,7 +176,8 @@ main(int argc, const char **argv) {
   nioWrite = nrrdIoStateNix(nioWrite);
 
   // Load the full array (no streaming)
-  if (nrrdLoad(nin, "tloadTest.nrrd", NULL)) {
+  fprintf(stderr, "Loading full array \n");
+  if (nrrdLoad(nin, "tchunkTest.nrrd", NULL)) {
     char *err;
     airMopAdd(mop, err = biffGetDone(NRRD), airFree, airMopAlways);
     fprintf(stderr, "%s: trouble reading data \"%s\":\n%s",
@@ -186,42 +188,36 @@ main(int argc, const char **argv) {
   // Compare dataDest with nin->data
   double *data_d = (double*)(nin->data);
   double eps = 0.000001;
+  fprintf(stderr, "%s: Testing all images! \n", me);
   for (long int ii = 0; ii < numberOfVolumeElementPerImage; ++ii) {
+	 //fprintf(stderr, "%s: Testing element %ld of all images! \n", me, ii);
      if (*(dataDest1 + ii) - *(data_d + ii) > eps) {
        fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
        return 1;
      }
+	 if (*(dataDest2 + ii) - *(data_d + ii + numberOfVolumeElementPerImage) > eps) {
+		 fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
+		 return 1;
+	 }
+	 if (*(dataDest3 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 2)) > eps) {
+		 fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
+		 return 1;
+	 }
+	 if (*(dataDest4 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 2)) > eps) {
+		 fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
+		 return 1;
+	 }
+	 if (*(dataDest5 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 2)) > eps) {
+		 fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
+		 return 1;
+	 }
   }
-  for (long int ii = 0; ii < numberOfVolumeElementPerImage; ++ii) {
-     if (*(dataDest2 + ii) - *(data_d + ii + numberOfVolumeElementPerImage) > eps) {
-       fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
-       return 1;
-     }
-  }
-  for (long int ii = 0; ii < numberOfVolumeElementPerImage; ++ii) {
-     if (*(dataDest3 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 2)) > eps) {
-       fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
-       return 1;
-     }
-  }
-  for (long int ii = 0; ii < numberOfVolumeElementPerImage; ++ii) {
-     if (*(dataDest4 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 3)) > eps) {
-       fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
-       return 1;
-     }
-  }
-  for (long int ii = 0; ii < numberOfVolumeElementPerImage; ++ii) {
-     if (*(dataDest5 + ii) - *(data_d + ii + (numberOfVolumeElementPerImage * 4)) > eps) {
-       fprintf(stderr, "%s: streamed array and not streamed array are different! \n", me);
-       return 1;
-     }
-  } 
+  fprintf(stderr, "%s: Testing success! \n", me);
 
   free(dataDest1);
   free(dataDest2);
   free(dataDest3);
   free(dataDest4);
   free(dataDest5);
-  airMopOkay(mop);
   return 0;
 }

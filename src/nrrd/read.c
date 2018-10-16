@@ -269,9 +269,9 @@ nrrdLineSkip(FILE *dataFile, NrrdIoState *nio) {
 }
 
 int
-_nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio, long int byteSkip) {
+_nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio, long long int byteSkip) {
   static const char me[]="nrrdByteSkipSkip";
-  int skipRet;
+  long long int skipRet;
   size_t bsize;
 
   if (!( dataFile && nrrd && nio )) {
@@ -284,7 +284,7 @@ _nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio, long int byteSki
     return 1;
   }
   if (byteSkip < 0) {
-    long backwards;
+    long long int backwards;
     if (nrrdEncodingRaw != nio->encoding) {
       biffAddf(NRRD, "%s: this function can do backwards byte skip only "
                "in %s encoding, not %s", me,
@@ -299,20 +299,33 @@ _nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio, long int byteSki
     bsize *= nrrdElementSize(nrrd);
     /* backwards is (positive) number of bytes AFTER data that we ignore */
     backwards = -byteSkip - 1;
-    /* HEY what if bsize fits in size_t but not in (signed) long? */
-    if (fseek(dataFile, -AIR_CAST(long, bsize) - backwards, SEEK_END)) {
+#ifdef unix
+	if (fseek(dataFile, -AIR_CAST(long long int, bsize) - backwards, SEEK_END)) {
+#else
+	if (_fseeki64(dataFile, -AIR_CAST(long long int, bsize) - backwards, SEEK_END)) {
+#endif // unix
       char stmp[AIR_STRLEN_SMALL];
       biffAddf(NRRD, "%s: failed to fseek(dataFile, %s, SEEK_END)", me,
                airSprintSize_t(stmp, bsize));
       return 1;
     }
     if (nrrdStateVerboseIO >= 2) {
-      fprintf(stderr, "(%s: actually skipped %d bytes)\n",
-              me, (int)ftell(dataFile));
+#ifdef unix
+	  fprintf(stderr, "(%s: actually skipped %lld bytes)\n",
+			me, (long long int) ftell(dataFile));
+#else
+	  fprintf(stderr, "(%s: actually skipped %lld bytes)\n",
+			me, (long long int) _ftelli64(dataFile));
+#endif // unix
     }
   } else {
-    if ((stdin == dataFile) || (-1==fseek(dataFile, byteSkip, SEEK_CUR))) {
-      long skipi;
+#ifdef unix
+	if ((stdin == dataFile) || (-1 == fseek(dataFile, byteSkip, SEEK_CUR))) {
+#else
+	if ((stdin == dataFile) || (-1 == _fseeki64(dataFile, byteSkip, SEEK_CUR))) {
+#endif // unix
+	
+      long long int skipi;
       /* fseek failed, perhaps because we're reading stdin, so
          we revert to consuming the input one byte at a time */
       for (skipi=0; skipi<byteSkip; skipi++) {

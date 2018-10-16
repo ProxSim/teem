@@ -36,7 +36,7 @@ _nrrdEncodingRaw_read(FILE *file, void *data, size_t elementNum,
   static const char me[]="_nrrdEncodingRaw_read";
   size_t ret, bsize;
   int fd, dio, car;
-  long savePos;
+  long long int savePos;
   char *data_c;
   size_t elementSize, maxChunkSize, remainderValue, chunkSize;
   size_t retTmp;
@@ -109,13 +109,24 @@ _nrrdEncodingRaw_read(FILE *file, void *data, size_t elementNum,
       ungetc(car, file);
     }
     if (2 <= nrrdStateVerboseIO && nio->byteSkip && stdin != file) {
-      savePos = ftell(file);
-      if (!fseek(file, 0, SEEK_END)) {
-        double frac = (AIR_CAST(double, bsize)
-                       /AIR_CAST(double, ftell(file) + 1));
-        fprintf(stderr, "(%s: used %g%% of file for nrrd data)\n", me,
-                100.0*frac);
-        fseek(file, savePos, SEEK_SET);
+      
+#ifdef unix
+	  savePos = ftell(file);
+	  if (!fseek(file, 0, SEEK_END)) {
+	    double frac = (AIR_CAST(double, bsize)
+	  	  / AIR_CAST(long long int, ftell(file) + 1));
+	    fprintf(stderr, "(%s: used %g%% of file for nrrd data)\n", me,
+	  	  100.0*frac);
+	    fseek(file, savePos, SEEK_SET);
+#else
+	  savePos = _ftelli64(file);
+	  if (!_fseeki64(file, 0, SEEK_END)) {
+		  double frac = (AIR_CAST(double, bsize)
+			  / AIR_CAST(long long int, _ftelli64(file) + 1));
+		  fprintf(stderr, "(%s: used %g%% of file for nrrd data)\n", me,
+			  100.0*frac);
+		  _fseeki64(file, savePos, SEEK_SET);
+#endif // unix
       }
     }
   }

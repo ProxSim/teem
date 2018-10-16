@@ -115,7 +115,7 @@ extern const NrrdEncoding _nrrdEncodingZRL;
 
 /* read.c */
 extern int _nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio,
-                             long int byteSkip);
+                             long long int byteSkip);
 extern int _nrrdCalloc(Nrrd *nrrd, NrrdIoState *nio, FILE *file);
 extern char _nrrdFieldSep[];
 

@@ -357,10 +357,10 @@ typedef struct NrrdIoState_t {
     headerStrpos;           /* ON READ, for NRRDs, if headerStringRead is
                                non-NULL, the current location of reading
                                in the header */
-  long int byteSkip;        /* exactly like lineSkip, but bytes
+  long long int byteSkip;        /* exactly like lineSkip, but bytes
                                instead of lines.  First the lines are
                                skipped, then the bytes */
-  long int *dataFSkip;      /* skip per-data-file line from a NRRD0006 "data
+  long long int *dataFSkip;      /* skip per-data-file line from a NRRD0006 "data
                                file: SKIPLIST" specification; THIS OVERRIDES
                                the single byteSkip above. The non-NULL-ity of
                                this indicates there is a per-file byte skip.
