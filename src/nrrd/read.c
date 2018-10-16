@@ -299,31 +299,31 @@ _nrrdByteSkipSkip(FILE *dataFile, Nrrd *nrrd, NrrdIoState *nio, long long int by
     bsize *= nrrdElementSize(nrrd);
     /* backwards is (positive) number of bytes AFTER data that we ignore */
     backwards = -byteSkip - 1;
-#ifdef unix
-	if (fseek(dataFile, -AIR_CAST(long long int, bsize) - backwards, SEEK_END)) {
-#else
+#ifdef _WIN32
 	if (_fseeki64(dataFile, -AIR_CAST(long long int, bsize) - backwards, SEEK_END)) {
-#endif // unix
+#else
+	if (fseek(dataFile, -AIR_CAST(long long int, bsize) - backwards, SEEK_END)) {
+#endif // windows
       char stmp[AIR_STRLEN_SMALL];
       biffAddf(NRRD, "%s: failed to fseek(dataFile, %s, SEEK_END)", me,
                airSprintSize_t(stmp, bsize));
       return 1;
     }
     if (nrrdStateVerboseIO >= 2) {
-#ifdef unix
-	  fprintf(stderr, "(%s: actually skipped %lld bytes)\n",
-			me, (long long int) ftell(dataFile));
-#else
+#ifdef _WIN32
 	  fprintf(stderr, "(%s: actually skipped %lld bytes)\n",
 			me, (long long int) _ftelli64(dataFile));
-#endif // unix
+#else
+	  fprintf(stderr, "(%s: actually skipped %lld bytes)\n",
+			me, (long long int) ftell(dataFile));
+#endif // windows
     }
   } else {
-#ifdef unix
-	if ((stdin == dataFile) || (-1 == fseek(dataFile, byteSkip, SEEK_CUR))) {
-#else
+#ifdef _WIN32
 	if ((stdin == dataFile) || (-1 == _fseeki64(dataFile, byteSkip, SEEK_CUR))) {
-#endif // unix
+#else
+	if ((stdin == dataFile) || (-1 == fseek(dataFile, byteSkip, SEEK_CUR))) {
+#endif // windows
 	
       long long int skipi;
       /* fseek failed, perhaps because we're reading stdin, so
