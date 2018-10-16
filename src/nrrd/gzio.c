@@ -258,11 +258,11 @@ _nrrdGzOpen(FILE* fd, const char* mode) {
      */
   } else {
     _nrrdGzCheckHeader(s); /* skip the .gz header */
-#ifdef unix
-	s->startpos = (ftell(s->file) - s->stream.avail_in);
-#else
+#ifdef _WIN32
 	s->startpos = (_ftelli64(s->file) - s->stream.avail_in);
-#endif // unix
+#else
+	s->startpos = (ftell(s->file) - s->stream.avail_in);
+#endif // windows
   }
   return (gzFile)s;
 }
